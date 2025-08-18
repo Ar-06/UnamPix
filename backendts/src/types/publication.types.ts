@@ -2,7 +2,7 @@ export interface PublicacionBody {
   idUsuario: string;
   foto_url: string;
   titulo: string;
-  desripcion: string;
+  descripcion: string;
   categoria: string;
   etiquetas: string;
 }

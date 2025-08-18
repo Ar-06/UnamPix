@@ -17,11 +17,11 @@ export const RouterPublics = Router();
 RouterPublics.post(
   "/create",
   authRequires,
-  validateSchema(createPublics),
   fileUpload({
     useTempFiles: true,
     tempFileDir: "./uploads",
   }),
+  validateSchema(createPublics),
   createPublic
 );
 

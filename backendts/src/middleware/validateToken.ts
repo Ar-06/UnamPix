@@ -8,14 +8,11 @@ export const authRequires = async (
   res: Response,
   next: NextFunction
 ) => {
-  const authHeader = req.headers.authorization;
+  const token = req.cookies?.token;
 
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    res.status(401).json({ msg: "No token provided" });
-    return;
+  if (!token) {
+    return res.status(401).json({ msg: "No token provided" });
   }
-
-  const token = authHeader.split(" ")[1]!;
 
   try {
     const payload = await verifyAccessToken(token);

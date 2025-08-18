@@ -14,7 +14,7 @@ export const createPublic = async (
   res: Response
 ) => {
   try {
-    const { titulo, desripcion, categoria, etiquetas } = req.body;
+    const { titulo, descripcion, categoria, etiquetas } = req.body;
     const idUsuario = req.user?.idUsuario;
     const fechaSubida = new Date().toISOString();
 
@@ -24,6 +24,7 @@ export const createPublic = async (
       res
         .status(400)
         .json({ message: "Se requiere una imagen para la publicacion" });
+      return;
     }
 
     if (req.files?.image) {
@@ -31,12 +32,27 @@ export const createPublic = async (
       const resultImage = await uploadImage(imagen.tempFilePath);
       foto_url = resultImage.secure_url.trim();
 
-      const etiquetasArray = JSON.parse(etiquetas);
+      let etiquetasArray: string[] = [];
+
+      if (typeof etiquetas === "string") {
+        etiquetasArray = etiquetas
+          .split(" ")
+          .map((tag) => tag.trim())
+          .filter((tag) => tag.startsWith("#") && tag.length > 1);
+      }
+
+      if (etiquetasArray.length === 0) {
+        res.status(400).json({
+          message: "Debes agregar al menos una etiqueta válida (ej: #unam)",
+        });
+        return;
+      }
 
       if (etiquetasArray.length > 3) {
         res
           .status(400)
           .json({ message: "Solo puedes agregar hasta 3 etiquetas" });
+        return;
       }
 
       const result = await turso.execute({
@@ -49,25 +65,52 @@ export const createPublic = async (
           fechaSubida,
           0,
           0,
-          desripcion,
+          descripcion,
           categoria,
         ],
       });
 
       const idPublicacion = result.rows[0]!.idPublicacion;
 
-      for (const etiqueta of etiquetasArray) {
-        await turso.execute({
-          sql: "INSERT INTO etiquetas (idPublicacion, nombre) VALUES (?,?)",
-          args: [idPublicacion, etiqueta],
-        });
-
-        await turso.execute({
-          sql: "UPDATE usuario SET NumPublicaciones = NumPublicaciones + 1 WHERE idUsuario = ?",
-          args: [idUsuario],
-        });
+      if (!idPublicacion) {
+        res
+          .status(500)
+          .json({ message: "Error: No se generó el ID de la publicación" });
+        return;
       }
-      res.status(201).json({ message: "Publicación creada con éxito" });
+
+      for (const etiqueta of etiquetasArray) {
+        await turso.execute(
+          "INSERT INTO etiquetas (idPublicacion, nombre) VALUES (?, ?)",
+          [idPublicacion, etiqueta]
+        );
+      }
+
+      await turso.execute({
+        sql: "UPDATE usuario SET NumPublicaciones = NumPublicaciones + 1 WHERE idUsuario = ?",
+        args: [idUsuario],
+      });
+
+      const nuevaPublicacion = {
+        idPublicacion: idPublicacion,
+        idUsuario: idUsuario,
+        URL: foto_url,
+        titulo: titulo,
+        fechaSubida: fechaSubida,
+        numReacciones: 0,
+        numComentarios: 0,
+        descripcion: descripcion,
+        categoria: categoria,
+        etiquetas: etiquetasArray.join(" "),
+        nombres: req.user?.nombres,
+      };
+
+      res
+        .status(201)
+        .json({
+          message: "Publicación creada con éxito",
+          publicacion: nuevaPublicacion,
+        });
       return;
     }
   } catch (error: any) {
