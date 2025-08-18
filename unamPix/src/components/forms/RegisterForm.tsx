@@ -39,16 +39,6 @@ export const RegisterForm = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (
-      !form.idUsuario ||
-      !form.nombres ||
-      !form.apellidos ||
-      !form.contraseña
-    ) {
-      toast.error({ text: "Faltan campos" });
-      return;
-    }
-
     await register(form);
   };
 

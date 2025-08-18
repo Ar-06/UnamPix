@@ -1,5 +1,9 @@
-import { Upload } from "lucide-react";
-import { useState } from "react";
+import { usePublication } from "@/context/publics/usePublicacion";
+import type { CreatePublic } from "@/types/public";
+import { toast } from "@pheralb/toast";
+import confetti from "canvas-confetti";
+import { Loader2, Upload, X } from "lucide-react";
+import { useEffect, useState } from "react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
@@ -12,11 +16,22 @@ import {
   SelectValue,
 } from "../ui/select";
 import { Textarea } from "../ui/textarea";
+
 const categories = ["Académico", "Eventos", "Deportes", "Cultural", "Social"];
 
 export const PublicationForm = () => {
   const [dragActive, setDragActive] = useState(false);
   const [selectCategory, setSelectedCategory] = useState("Académico");
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [image, setImage] = useState<File | null>(null);
+  const { createPublic, errors, loading, clearErrors } = usePublication();
+
+  const [form, setForm] = useState<CreatePublic>({
+    titulo: "",
+    categoria: "",
+    descripcion: "",
+    etiquetas: "",
+  });
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
@@ -28,11 +43,60 @@ export const PublicationForm = () => {
     }
   };
 
+  const handleFile = (file: File | null) => {
+    if (file) {
+      setImage(file);
+      const fileUrl = URL.createObjectURL(file);
+      setPreviewImage(fileUrl);
+    }
+  };
+
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
+    const file = e.dataTransfer.files?.[0] || null;
+    handleFile(file);
   };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] || null;
+    handleFile(file);
+  };
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { id, value } = e.target;
+    setForm((s) => ({ ...s, [id]: value }));
+    if (errors.length) clearErrors();
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const formData = new FormData();
+    formData.append("titulo", form.titulo);
+    formData.append("descripcion", form.descripcion);
+    if (image) formData.append("image", image);
+    formData.append("categoria", form.categoria);
+    formData.append("etiquetas", form.etiquetas);
+    await createPublic(formData);
+    confetti();
+  };
+
+  useEffect(() => {
+    if (errors.length) {
+      errors.forEach((err) => toast.error({ text: err }));
+    }
+  }, [errors]);
+
+  useEffect(() => {
+    return () => {
+      if (previewImage) {
+        URL.revokeObjectURL(previewImage);
+      }
+    };
+  }, [previewImage]);
 
   return (
     <div className="max-w-6xl mx-auto">
@@ -44,78 +108,114 @@ export const PublicationForm = () => {
           <Button
             type="submit"
             form="publication-form"
+            disabled={loading}
             className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 cursor-pointer"
           >
-            <span className="font-bold">Crear</span>
+            {loading ? (
+              <>
+                <Loader2 className="animate-spin w-4 h-4 mr-2" />
+                Cargando...
+              </>
+            ) : (
+              "Crear"
+            )}
           </Button>
         </div>
       </section>
 
-      <form id="publication-form" className="px-6 py-8">
+      <form id="publication-form" className="px-6 py-8" onSubmit={handleSubmit}>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <div className="space-y-4">
-            <div
-              className={`relative border-2 h-full border-dashed rounded-2xl p-8 text-center transition-colors ${
-                dragActive
-                  ? "border-blue-400 bg-blue-50"
-                  : "border-gray-300 bg-gray-100"
-              }`}
-              onDragEnter={handleDrag}
-              onDragLeave={handleDrag}
-              onDragOver={handleDrag}
-              onDrop={handleDrop}
-            >
-              <div className="flex flex-col items-center pt-20 space-y-4">
-                <div className="w-12 h-12 rounded-full border-2 border-gray-400 flex items-center justify-center">
-                  <Upload className="w-6 h-6 text-gray-600" />
-                </div>
-                <div>
-                  <p className="text-gray-700 font-medium mb-2">
-                    Elige un archivo o arrástralo y colócalo aquí
-                  </p>
-                  <p className="text-sm text-gray-600 leading-relaxed">
-                    Recomendamos usar archivos .jpg .png .webp de alta calidad
-                    con un tamaño inferior a 20 MB
-                  </p>
-                </div>
-              </div>
-              <Input
-                type="file"
-                name="image"
-                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                accept=".jpg,.jpeg,.png,.webp"
+          {previewImage ? (
+            <div className="relative">
+              <img
+                src={previewImage}
+                alt="vista previa"
+                className="h-full w-auto object-cover rounded-md"
               />
+              <button
+                type="button"
+                className="absolute top-1 right-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-1 rounded-full cursor-pointer"
+                onClick={() => {
+                  setImage(null);
+                  setPreviewImage(null);
+                }}
+              >
+                <X className="h-4 w-4" />
+              </button>
             </div>
-          </div>
+          ) : (
+            <div className="space-y-4">
+              <div
+                className={`relative border-2 h-full border-dashed rounded-2xl p-8 text-center transition-colors ${
+                  dragActive
+                    ? "border-blue-400 bg-blue-50"
+                    : "border-gray-300 bg-gray-100"
+                }`}
+                onDragEnter={handleDrag}
+                onDragLeave={handleDrag}
+                onDragOver={handleDrag}
+                onDrop={handleDrop}
+              >
+                <div className="flex flex-col items-center pt-20 space-y-4">
+                  <div className="w-12 h-12 rounded-full border-2 border-gray-400 flex items-center justify-center">
+                    <Upload className="w-6 h-6 text-gray-600" />
+                  </div>
+                  <div>
+                    <p className="text-gray-700 font-medium mb-2">
+                      Elige un archivo o arrástralo y colócalo aquí
+                    </p>
+                    <p className="text-sm text-gray-600 leading-relaxed">
+                      Recomendamos usar archivos .jpg .png .webp de alta calidad
+                      con un tamaño inferior a 20 MB
+                    </p>
+                  </div>
+                </div>
+                <Input
+                  type="file"
+                  name="image"
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                  accept=".jpg,.jpeg,.png,.webp"
+                  onChange={handleImageChange}
+                  required
+                />
+              </div>
+            </div>
+          )}
 
           <div className="space-y-6">
             <div className="space-y-2">
               <Label
-                htmlFor="title"
+                htmlFor="titulo"
                 className="text-sm font-medium text-gray-600"
               >
                 Título
               </Label>
               <Input
-                id="title"
-                name="title"
+                id="titulo"
+                name="titulo"
+                value={form.titulo ?? ""}
+                onChange={handleChange}
                 placeholder="Agrega un título"
                 className="border-gray-200 rounded-xl py-3 px-4 text-gray-700 placeholder:text-gray-400"
+                required
               />
             </div>
 
             <div className="space-y-2">
               <Label
-                htmlFor="description"
+                htmlFor="descripcion"
                 className="text-sm font-medium text-gray-600"
               >
                 Descripción
               </Label>
               <Textarea
-                id="description"
-                name="description"
+                id="descripcion"
+                name="descripcion"
+                value={form.descripcion ?? ""}
+                onChange={handleChange}
                 placeholder="Agrega una descripción detallada"
                 className="border-gray-200 rounded-xl py-3 px-4 text-gray-700 placeholder:text-gray-400 min-h-[120px] resize-none"
+                required
               />
             </div>
 
@@ -128,7 +228,10 @@ export const PublicationForm = () => {
               </Label>
               <Select
                 value={selectCategory}
-                onValueChange={setSelectedCategory}
+                onValueChange={(val) => {
+                  setSelectedCategory(val);
+                  setForm((s) => ({ ...s, categoria: val }));
+                }}
               >
                 <SelectTrigger className="border-gray-200 rounded-xl py-3 px-4 w-full">
                   <SelectValue />
@@ -160,10 +263,21 @@ export const PublicationForm = () => {
                 type="text"
                 name="etiquetas"
                 id="etiquetas"
+                value={form.etiquetas}
+                onChange={handleChange}
                 placeholder="Ej: #unam #universidad #carrera"
                 className="border-gray-200 rounded-xl py-3 px-4 text-gray-700 placeholder:text-gray-400"
+                required
               />
             </div>
+
+            {errors?.length > 0 && (
+              <div className="text-sm text-red-600 space-y-1">
+                {errors.map((err, i) => (
+                  <p key={i}>{err}</p>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </form>

@@ -1,7 +1,6 @@
 import { useAuth } from "@/context/auth/useAuth";
 import {
   Camera,
-  Download,
   Filter,
   Heart,
   LogOut,
@@ -73,9 +72,11 @@ export const HeaderGallery = () => {
           <div className="flex items-center gap-3">
             {isAuthenticated ? (
               <>
-                <Button className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 to hover:to-indigo-700 cursor-pointer">
-                  Subir Foto
-                </Button>
+                <Link to="/createPublication">
+                  <Button className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 to hover:to-indigo-700 cursor-pointer">
+                    Subir Foto
+                  </Button>
+                </Link>
 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -102,10 +103,6 @@ export const HeaderGallery = () => {
                     <DropdownMenuItem className="cursor-pointer">
                       <Heart className="mr-2 h-4 w-4" />
                       <span>Mis Fotos favoritas</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem className="cursor-pointer">
-                      <Download className="mr-2 h-4 w-4" />
-                      <span>Mis Subidas</span>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem

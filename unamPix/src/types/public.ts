@@ -12,6 +12,18 @@ export interface Publics {
   nombres: string;
 }
 
+export interface CreatePublic {
+  titulo: string;
+  descripcion: string;
+  categoria: string;
+  etiquetas: string;
+}
+
+export interface CreatePublicResponse {
+  message: string;
+  publicacion: Publics;
+}
+
 export type idPublicacion = Pick<Publics, "idPublicacion">;
 export type idUsuario = Pick<Publics, "idUsuario">;
 export type URL = Pick<Publics, "URL">;
