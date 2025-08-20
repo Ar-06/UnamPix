@@ -24,7 +24,8 @@ export const PublicationForm = () => {
   const [selectCategory, setSelectedCategory] = useState("Académico");
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [image, setImage] = useState<File | null>(null);
-  const { createPublic, errors, loading, clearErrors } = usePublication();
+  const { createPublic, errors, createdPublication, clearErrors } =
+    usePublication();
 
   const [form, setForm] = useState<CreatePublic>({
     titulo: "",
@@ -108,10 +109,10 @@ export const PublicationForm = () => {
           <Button
             type="submit"
             form="publication-form"
-            disabled={loading}
+            disabled={createdPublication}
             className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 cursor-pointer"
           >
-            {loading ? (
+            {createdPublication ? (
               <>
                 <Loader2 className="animate-spin w-4 h-4 mr-2" />
                 Cargando...
@@ -270,14 +271,6 @@ export const PublicationForm = () => {
                 required
               />
             </div>
-
-            {errors?.length > 0 && (
-              <div className="text-sm text-red-600 space-y-1">
-                {errors.map((err, i) => (
-                  <p key={i}>{err}</p>
-                ))}
-              </div>
-            )}
           </div>
         </div>
       </form>

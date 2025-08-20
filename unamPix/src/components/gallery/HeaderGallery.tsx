@@ -96,10 +96,12 @@ export const HeaderGallery = () => {
                       </div>
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem className="cursor-pointer">
-                      <UserCircle className="mr-2 h-4 w-4" />
-                      <span>Mi perfil</span>
-                    </DropdownMenuItem>
+                    <Link to="/profile">
+                      <DropdownMenuItem className="cursor-pointer">
+                        <UserCircle className="mr-2 h-4 w-4" />
+                        <span>Mi perfil</span>
+                      </DropdownMenuItem>
+                    </Link>
                     <DropdownMenuItem className="cursor-pointer">
                       <Heart className="mr-2 h-4 w-4" />
                       <span>Mis Fotos favoritas</span>

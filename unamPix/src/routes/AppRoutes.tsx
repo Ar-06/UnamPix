@@ -1,5 +1,6 @@
 import { AuthProvider } from "@/context/auth/AuthProvider";
 import { PublicsProvider } from "@/context/publics/PublicationsProvider";
+import { Profile } from "@/pages/Profile";
 import { Publication } from "@/pages/Publication";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Galería } from "../pages/Gallery";
@@ -18,6 +19,7 @@ export const AppRoutes = () => {
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/createPublication" element={<Publication />} />
+            <Route path="/profile" element={<Profile />} />
           </Routes>
         </PublicsProvider>
       </AuthProvider>

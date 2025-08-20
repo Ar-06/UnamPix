@@ -1,17 +1,22 @@
-import { createPublics, getPublics } from "@/api/publics";
+import { createPublics, getPublics, getPublicsByUser } from "@/api/publics";
 import type { Publics } from "@/types/public";
 import type { PublicProviderProps } from "@/types/publicProvider";
 import { toast } from "@pheralb/toast";
 import { AxiosError } from "axios";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../auth/useAuth";
 import { PublicsContext } from "./publicContext";
 
 export const PublicsProvider = ({ children }: PublicProviderProps) => {
   const [publications, setPublications] = useState<Publics[]>([]);
+  const [publicationUser, setPublicationsUser] = useState<Publics[]>([]);
   const [filterPublications, setFilterPublications] = useState<Publics[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingUserPublications, setLoadingUserPublications] = useState(false);
+  const [createdPublication, setCreatedPublication] = useState(false);
   const [errors, setErrors] = useState<string[]>([]);
+  const { isAuthenticated, user, loading: authLoading } = useAuth();
 
   const clearErrors = () => setErrors([]);
   const navigate = useNavigate();
@@ -36,15 +41,64 @@ export const PublicsProvider = ({ children }: PublicProviderProps) => {
     loadPublications();
   }, []);
 
+  useEffect(() => {
+    const loadPublicationsByUser = async () => {
+      if (authLoading) return;
+
+      setPublicationsUser([]);
+      setLoading(true);
+      setErrors([]);
+
+      if (isAuthenticated && user?.idUsuario) {
+        try {
+          await new Promise((resolve) => setTimeout(resolve, 3000));
+
+          const data = await getPublicsByUser({ idUsuario: user?.idUsuario });
+          if (Array.isArray(data)) {
+            setPublicationsUser(data);
+          } else if (data.publications) {
+            setPublicationsUser(data.publications);
+          } else {
+            setPublicationsUser([]);
+          }
+        } catch (error) {
+          if (error instanceof AxiosError) {
+            if (error.response?.status === 500) {
+              const errorMsg =
+                error.response?.data?.error || "Error del servidor";
+              setErrors([errorMsg]);
+              toast.error({ text: errorMsg });
+            }
+          } else {
+            console.error("Error inesperado:", error);
+          }
+          setPublicationsUser([]);
+        } finally {
+          setTimeout(() => {
+            setLoadingUserPublications(false);
+          }, 500);
+        }
+      } else {
+        setPublicationsUser([]);
+        setTimeout(() => {
+          setLoadingUserPublications(false);
+        }, 500);
+      }
+    };
+    loadPublicationsByUser();
+  }, [isAuthenticated, user, authLoading]);
+
   const createPublic = async (data: FormData) => {
     try {
       setErrors([]);
-      setLoading(true);
+      setCreatedPublication(true);
 
       const createRes = await createPublics(data);
 
       setPublications([...publications, createRes.publicacion]);
       setFilterPublications([...publications, createRes.publicacion]);
+      setPublicationsUser([...publicationUser, createRes.publicacion]);
+
       navigate("/galeria", { replace: true });
       toast.success({ text: "Publicación creada correctamente" });
     } catch (error) {
@@ -64,13 +118,22 @@ export const PublicsProvider = ({ children }: PublicProviderProps) => {
       const errorMsg = getErrorMessage(error);
       setErrors([errorMsg]);
     } finally {
-      setLoading(false);
+      setCreatedPublication(false);
     }
   };
 
   return (
     <PublicsContext.Provider
-      value={{ errors, loading, clearErrors, filterPublications, createPublic }}
+      value={{
+        errors,
+        loading,
+        loadingUserPublications,
+        createdPublication,
+        clearErrors,
+        filterPublications,
+        publicationUser,
+        createPublic,
+      }}
     >
       {children}
     </PublicsContext.Provider>

@@ -82,14 +82,6 @@ export const LoginForm = () => {
               />
             </div>
 
-            {errors?.length > 0 && (
-              <div className="text-sm tex-red-600 space-y-1">
-                {errors.map((err, i) => (
-                  <p key={i}>{err}</p>
-                ))}
-              </div>
-            )}
-
             <Button
               type="submit"
               className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 cursor-pointer"
