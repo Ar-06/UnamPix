@@ -105,12 +105,10 @@ export const createPublic = async (
         nombres: req.user?.nombres,
       };
 
-      res
-        .status(201)
-        .json({
-          message: "Publicación creada con éxito",
-          publicacion: nuevaPublicacion,
-        });
+      res.status(201).json({
+        message: "Publicación creada con éxito",
+        publicacion: nuevaPublicacion,
+      });
       return;
     }
   } catch (error: any) {
@@ -270,19 +268,18 @@ export const getPublicsByUser = async (req: Request, res: Response) => {
   const idUsuario = req.user?.idUsuario;
 
   try {
-    const publicaciones = await queryOne<Publicacion>(
+    const publicacionesByUser = await turso.execute(
       "SELECT * FROM publicacion WHERE idUsuario = ?",
       [idUsuario]
     );
 
-    if (!publicaciones) {
-      res
-        .status(404)
-        .json({ messgae: "El usuario no tiene publicaciones disponibles" });
-      return;
-    }
-
-    res.status(200).json(publicaciones);
+    res.status(200).json({
+      publications: publicacionesByUser.rows,
+      message:
+        publicacionesByUser.rows.length === 0
+          ? "El usuario no tiene publicaciones disponibles"
+          : null,
+    });
   } catch (error: any) {
     res.status(500).json({
       error: "Error al obtener las publicaciones del usuario: " + error.message,

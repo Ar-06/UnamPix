@@ -46,7 +46,7 @@ export const register = async (
       secure: false,
       sameSite: "lax",
       maxAge: 7 * 24 * 60 * 60 * 1000,
-      path: '/'
+      path: "/",
     });
 
     res.status(201).json({ message: "Usuario registrado con éxito: ", token });
@@ -113,34 +113,6 @@ export const logout = async (req: Request, res: Response) => {
     res.status(200).json({ message: "Cierre de sesión exitoso" });
   } catch (error) {
     res.status(500).json({ error: "Error al cerrar sesión" });
-  }
-};
-
-export const profile = async (req: Request, res: Response) => {
-  try {
-    if (!req.user?.idUsuario) {
-      res
-        .status(401)
-        .json({ message: "No autorizado, token inválido o faltante" });
-      return;
-    }
-
-    const result = await turso.execute({
-      sql: `SELECT idUsuario, Nombres, Apellidos FROM usuario WHERE idUsuario = ?`,
-      args: [req.user?.idUsuario],
-    });
-
-    const user = result.rows[0];
-
-    if (!user) {
-      res.status(404).json({ message: "Usuario no encontrado" });
-      return;
-    }
-    res.json(user);
-  } catch (error: any) {
-    res
-      .status(500)
-      .json({ error: "Error al obtener el perfil: " + error.message });
   }
 };
 
