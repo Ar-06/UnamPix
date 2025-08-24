@@ -1,9 +1,14 @@
-import { createPublics, getPublics, getPublicsByUser } from "@/api/publics";
+import {
+  createPublics,
+  getPublicOne,
+  getPublics,
+  getPublicsByUser,
+} from "@/api/publics";
 import type { Publics } from "@/types/public";
 import type { PublicProviderProps } from "@/types/publicProvider";
 import { toast } from "@pheralb/toast";
 import { AxiosError } from "axios";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/useAuth";
 import { PublicsContext } from "./publicContext";
@@ -15,6 +20,8 @@ export const PublicsProvider = ({ children }: PublicProviderProps) => {
   const [loading, setLoading] = useState(true);
   const [loadingUserPublications, setLoadingUserPublications] = useState(false);
   const [createdPublication, setCreatedPublication] = useState(false);
+  const [loadingPublic, setLoadingPublic] = useState(false);
+  const [publicationOne, setPublicationOne] = useState<Publics | null>(null);
   const [errors, setErrors] = useState<string[]>([]);
   const { isAuthenticated, user, loading: authLoading } = useAuth();
 
@@ -122,16 +129,47 @@ export const PublicsProvider = ({ children }: PublicProviderProps) => {
     }
   };
 
+  const fetchPublicOne = useCallback(async (idPublicacion: string) => {
+    if (!idPublicacion) {
+      setErrors(["ID no válido"]);
+      return;
+    }
+
+    setLoadingPublic(true);
+    setErrors([]);
+
+    try {
+      const data = await getPublicOne({ idPublicacion });
+      setPublicationOne(data);
+    } catch (error) {
+      if (error instanceof AxiosError) {
+        const errorMsg =
+          error.response?.data?.error ||
+          error.response?.data?.message ||
+          "Error del servidor";
+        setErrors([errorMsg]);
+        toast.error({ text: errorMsg });
+      } else {
+        console.error("Error inesperado:", error);
+      }
+    } finally {
+      setLoadingPublic(false);
+    }
+  }, []);
+
   return (
     <PublicsContext.Provider
       value={{
         errors,
         loading,
         loadingUserPublications,
+        loadingPublic,
         createdPublication,
         clearErrors,
         filterPublications,
         publicationUser,
+        publicationOne,
+        fetchPublicOne,
         createPublic,
       }}
     >

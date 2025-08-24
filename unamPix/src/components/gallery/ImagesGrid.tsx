@@ -1,7 +1,7 @@
 import { usePublication } from "@/context/publics/usePublicacion";
-import type { ListOfPublics } from "@/types/public";
+import type { idPublicacion, ListOfPublics } from "@/types/public";
 import { Camera, Plus } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Skeleton } from "../ui/skeleton";
 
 interface Props {
@@ -12,6 +12,17 @@ const SKELETON_COUNT = 10;
 
 export const ImagesGrid = ({ images, isUserProfile }: Props) => {
   const { loadingUserPublications } = usePublication();
+
+  const navigate = useNavigate()
+
+  const handleImageClick = ({ idPublicacion }: idPublicacion) => {
+    if (!idPublicacion) {
+      console.error("ID de la publicacion no está definido")
+      return
+    }
+    navigate(`/publics/${idPublicacion}`)
+    console.log(idPublicacion)
+  }
 
   if (loadingUserPublications) {
     return (
@@ -81,6 +92,7 @@ export const ImagesGrid = ({ images, isUserProfile }: Props) => {
               alt={image.titulo || "Sin título"}
               className="w-full h-full object-cover"
               loading="lazy"
+              onClick={() => handleImageClick({ idPublicacion: image.idPublicacion })}
             />
           </div>
         ))}

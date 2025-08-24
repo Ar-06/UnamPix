@@ -7,6 +7,7 @@ import { Galería } from "../pages/Gallery";
 import { Home } from "../pages/Home";
 import { Login } from "../pages/Login";
 import { Register } from "../pages/Register";
+import { ImageDetail } from "@/components/gallery/ImageDetail";
 
 export const AppRoutes = () => {
   return (
@@ -20,6 +21,7 @@ export const AppRoutes = () => {
             <Route path="/register" element={<Register />} />
             <Route path="/createPublication" element={<Publication />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/publics/:idPublicacion" element={<ImageDetail />} />
           </Routes>
         </PublicsProvider>
       </AuthProvider>

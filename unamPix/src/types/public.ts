@@ -1,5 +1,5 @@
 export interface Publics {
-  idPublicacion: number;
+  idPublicacion: string;
   idUsuario: string;
   URL: string;
   titulo: string;
