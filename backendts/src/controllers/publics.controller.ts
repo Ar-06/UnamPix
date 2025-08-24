@@ -121,7 +121,7 @@ export const createPublic = async (
 export const getPublications = async (req: Request, res: Response) => {
   try {
     const publicaciones = await turso.execute({
-      sql: `SELECT p.*, GROUP_CONCAT(e.nombre, ' ') AS etiquetas, u.Nombres
+      sql: `SELECT p.idPublicacion ,p.URL, GROUP_CONCAT(e.nombre, ' ') AS etiquetas, u.Nombres
         FROM publicacion p
         LEFT JOIN etiquetas e ON p.idPublicacion = e.idPublicacion
         JOIN usuario u ON p.idUsuario = u.idUsuario
@@ -269,7 +269,7 @@ export const getPublicsByUser = async (req: Request, res: Response) => {
 
   try {
     const publicacionesByUser = await turso.execute(
-      "SELECT * FROM publicacion WHERE idUsuario = ?",
+      "SELECT idPublicacion, URL FROM publicacion WHERE idUsuario = ?",
       [idUsuario]
     );
 
@@ -283,6 +283,28 @@ export const getPublicsByUser = async (req: Request, res: Response) => {
   } catch (error: any) {
     res.status(500).json({
       error: "Error al obtener las publicaciones del usuario: " + error.message,
+    });
+  }
+};
+
+export const getPublicOne = async (req: Request, res: Response) => {
+  const { idPublicacion } = req.params;
+
+  try {
+    const publicacionOne = await queryOne<Publicacion>(
+      "SELECT * FROM publicacion WHERE idPublicacion = ?",
+      [idPublicacion]
+    );
+
+    if (!publicacionOne) {
+      res.status(400).json({ message: "Publicacion no encontrada" });
+      return;
+    }
+
+    res.status(200).json(publicacionOne);
+  } catch {
+    res.status(500).json({
+      error: "Error al obtener la publicacion",
     });
   }
 };

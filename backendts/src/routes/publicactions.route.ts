@@ -5,6 +5,7 @@ import {
   updatePublics,
   deletePublic,
   getPublicsByUser,
+  getPublicOne
 } from "../controllers/publics.controller.ts";
 
 import { authRequires } from "../middleware/validateToken.ts";
@@ -38,3 +39,4 @@ RouterPublics.patch(
 );
 
 RouterPublics.get("/:idUsuario", authRequires, getPublicsByUser);
+RouterPublics.get("/publicdetail/:idPublicacion", getPublicOne);
