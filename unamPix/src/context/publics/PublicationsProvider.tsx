@@ -157,6 +157,18 @@ export const PublicsProvider = ({ children }: PublicProviderProps) => {
     }
   }, []);
 
+  const initialUsers = () => {
+    let initials = "";
+    if (publicationOne?.nombres) {
+      const nameParts = publicationOne.nombres.split(" ");
+      initials = nameParts
+        .map((part) => part[0])
+        .join("")
+        .toUpperCase();
+    }
+    return initials;
+  };
+
   return (
     <PublicsContext.Provider
       value={{
@@ -171,6 +183,7 @@ export const PublicsProvider = ({ children }: PublicProviderProps) => {
         publicationOne,
         fetchPublicOne,
         createPublic,
+        initialUsers
       }}
     >
       {children}
