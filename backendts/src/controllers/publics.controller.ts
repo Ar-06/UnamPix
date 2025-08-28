@@ -121,11 +121,7 @@ export const createPublic = async (
 export const getPublications = async (req: Request, res: Response) => {
   try {
     const publicaciones = await turso.execute({
-      sql: `SELECT p.idPublicacion ,p.URL, GROUP_CONCAT(e.nombre, ' ') AS etiquetas, u.Nombres
-        FROM publicacion p
-        LEFT JOIN etiquetas e ON p.idPublicacion = e.idPublicacion
-        JOIN usuario u ON p.idUsuario = u.idUsuario
-        GROUP BY p.idPublicacion`,
+      sql: "SELECT idPublicacion, URL FROM publicacion",
     });
 
     if (publicaciones.rows.length === 0) {
@@ -292,7 +288,11 @@ export const getPublicOne = async (req: Request, res: Response) => {
 
   try {
     const publicacionOne = await queryOne<Publicacion>(
-      "SELECT * FROM publicacion WHERE idPublicacion = ?",
+      `SELECT p.idPublicacion, p.URL, p.titulo, p.fechaSubida, p.numReacciones, p.numComentarios, p.descripcion, p.categoria, GROUP_CONCAT(e.nombre, ' ') AS etiquetas, u.nombres
+        FROM publicacion p  
+        JOIN etiquetas e ON p.idPublicacion = e.idPublicacion
+        JOIN usuario u ON p.idUsuario = u.idUsuario WHERE p.idPublicacion = ?
+        GROUP BY p.idPublicacion, p.URL, u.nombres`,
       [idPublicacion]
     );
 
@@ -302,7 +302,8 @@ export const getPublicOne = async (req: Request, res: Response) => {
     }
 
     res.status(200).json(publicacionOne);
-  } catch {
+  } catch (error) {
+    console.error("Error", error);
     res.status(500).json({
       error: "Error al obtener la publicacion",
     });
