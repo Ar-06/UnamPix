@@ -183,7 +183,7 @@ export const PublicsProvider = ({ children }: PublicProviderProps) => {
         publicationOne,
         fetchPublicOne,
         createPublic,
-        initialUsers
+        initialUsers,
       }}
     >
       {children}
